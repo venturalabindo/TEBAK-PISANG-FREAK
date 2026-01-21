@@ -147,6 +147,15 @@
             transform: translate(4px, 4px);
             box-shadow: 6px 6px 0px #000;
         }
+
+        #dev-tools {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            z-index: 9999;
+            opacity: 0.3;
+        }
+        #dev-tools:hover { opacity: 1; }
     </style>
 </head>
 
@@ -159,6 +168,11 @@
             <input type="text" id="player-name-input" maxlength="15" placeholder="Nama lo siapa..." class="w-full p-4 bg-yellow-100 border-4 border-black mb-6 text-xl font-bold text-center outline-none focus:bg-cyan-300">
             <button onclick="savePlayerName()" class="w-full bg-blue-500 text-white font-black py-5 border-4 border-black shadow-[8px_8px_0px_#000] text-xl uppercase transition-all active:translate-y-2 active:shadow-none">GAS MAEN!</button>
         </div>
+    </div>
+
+    <!-- Dev Tools -->
+    <div id="dev-tools">
+        <button onclick="inspectDatabase()" class="bg-black text-white text-[10px] p-2 rounded">DEV: CEK DB</button>
     </div>
 
     <div class="main-wrapper">
@@ -226,6 +240,7 @@
         let score = 0, level = 1, isMoving = false, canInteract = false;
         let bananaAtWrapper = 1, positions = [15, 50, 85], cupMapping = [0, 1, 2];
 
+        // Inisialisasi Firebase
         async function initGame() {
             try {
                 if (typeof __firebase_config === 'undefined') return;
@@ -234,6 +249,7 @@
                 db = firebase.firestore();
                 auth = firebase.auth();
 
+                // Auth Logic sesuai Mandatori
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     await auth.signInWithCustomToken(__initial_auth_token);
                 } else {
@@ -242,30 +258,92 @@
 
                 auth.onAuthStateChanged(u => {
                     user = u;
-                    if (user) loadLeaderboard();
+                    if (user) {
+                        console.log("Status: Pemain Terhubung (" + user.uid + ")");
+                        loadLeaderboard(); // Load list skor segera setelah login
+                    }
                 });
-            } catch (e) { console.error(e); }
+            } catch (e) { console.error("Firebase Error:", e); }
         }
 
+        // Simpan Skor ke Firestore
+        async function updateHighScore() {
+            if (!db || !user || score === 0) return;
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'tebak-pisang-freak';
+            
+            try {
+                // Gunakan path mandatori: /artifacts/{appId}/public/data/{collection}/{docId}
+                await db.doc(`/artifacts/${appId}/public/data/leaderboard/${user.uid}`).set({
+                    name: playerName,
+                    score: score,
+                    level: level,
+                    userId: user.uid,
+                    lastUpdated: Date.now()
+                }, { merge: true });
+                console.log("Skor Berhasil Disimpan!");
+            } catch (err) {
+                console.error("Gagal Simpan Skor:", err);
+            }
+        }
+
+        // Ambil Data Real-time untuk Top Skor
+        function loadLeaderboard() {
+            if (!db) return;
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'tebak-pisang-freak';
+            
+            // Listener Real-time
+            db.collection(`/artifacts/${appId}/public/data/leaderboard`)
+                .onSnapshot(snap => {
+                    const list = [];
+                    snap.forEach(doc => list.push(doc.data()));
+                    
+                    // Urutkan skor tertinggi di memori (Rule 2: Simple Query Only)
+                    list.sort((a, b) => b.score - a.score);
+                    
+                    const listHtml = list.slice(0, 10).map((u, i) => `
+                        <div class="flex justify-between items-center p-4 bg-white border-4 border-black shadow-[5px_5px_0px_#000] ${u.userId === user?.uid ? 'bg-yellow-100 border-yellow-500' : ''}">
+                            <div class="flex flex-col">
+                                <span class="font-bold text-lg">${i+1}. ${u.name || 'Anonim'}</span>
+                                <span class="text-[10px] uppercase font-black opacity-60">Level: ${u.level || 1}</span>
+                            </div>
+                            <div class="text-right">
+                                <span class="font-black text-2xl text-green-600">${u.score}</span>
+                                <p class="text-[8px]">POIN</p>
+                            </div>
+                        </div>
+                    `).join('');
+                    
+                    document.getElementById('leaderboard-list').innerHTML = listHtml || '<p class="text-center italic">Belum ada jawara...</p>';
+                }, (err) => {
+                    console.error("Leaderboard Error:", err);
+                });
+        }
+
+        // Fungsi Debug untuk Developer
+        window.inspectDatabase = async () => {
+            if (!db) return;
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'tebak-pisang-freak';
+            console.log("--- DEBUG DATABASE ---");
+            const snap = await db.collection(`/artifacts/${appId}/public/data/leaderboard`).get();
+            const data = [];
+            snap.forEach(d => data.push(d.data()));
+            console.table(data);
+            alert("Data mentah sudah muncul di Console (F12)!");
+        };
+
+        // --- Logika Game ---
         async function callFreakAI(context) {
             const aiBox = document.getElementById('ai-comment-box');
             const aiText = document.getElementById('ai-text');
             try {
-                // System prompt diubah agar lebih ramah dan suportif
-                const prompt = `Pemain: ${playerName}, Skor: ${score}, Level: ${level}, Konteks: ${context}. 
-                Berperanlah sebagai 'BESTIE FREAK' yang asyik, kocak, nyeleneh tapi suportif. 
-                Gunakan bahasa gaul Jakarta. JANGAN menghina atau merendahkan pemain. 
-                Berikan semangat atau komentar lucu yang mendukung. Maks 10 kata.`;
-                
+                const prompt = `Pemain: ${playerName}, Skor: ${score}, Level: ${level}, Konteks: ${context}. Berperanlah sebagai 'BESTIE FREAK' kocak gaul Jakarta. Max 10 kata.`;
                 const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
                 });
-
                 const data = await response.json();
-                const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Yok bisa yok bestie!";
-                aiText.innerText = `"${reply.trim()}"`;
+                aiText.innerText = `"${data.candidates?.[0]?.content?.parts?.[0]?.text.trim() || 'Yok bisa yok!'}"`;
                 aiBox.classList.remove('hidden');
             } catch (e) { aiBox.classList.add('hidden'); }
         }
@@ -275,7 +353,7 @@
             if (!input.value.trim()) return;
             playerName = input.value.trim();
             document.getElementById('login-box').classList.add('hidden');
-            callFreakAI("Mulai masuk game");
+            callFreakAI("Baru masuk game");
         };
 
         window.startSequence = async () => {
@@ -297,20 +375,13 @@
             await new Promise(r => setTimeout(r, 400));
             activeBanana.classList.remove('visible');
 
-            const startSpeed = 0.4;
-            const endSpeed = 0.05;
-            const speed = Math.max(endSpeed, startSpeed - ((level - 1) * (startSpeed - endSpeed) / 99));
-            
-            const startShuffles = 8;
-            const endShuffles = 50;
-            const count = Math.min(endShuffles, Math.floor(startShuffles + ((level - 1) * (endShuffles - startShuffles) / 99)));
-
+            const speed = Math.max(0.05, 0.4 - ((level - 1) * 0.035));
             document.documentElement.style.setProperty('--speed', `${speed}s`);
             
+            const count = Math.min(40, 8 + (level * 2));
             for (let i = 0; i < count; i++) {
                 let p1 = Math.floor(Math.random() * 3), p2 = Math.floor(Math.random() * 3);
                 while (p1 === p2) p2 = Math.floor(Math.random() * 3);
-                
                 [cupMapping[p1], cupMapping[p2]] = [cupMapping[p2], cupMapping[p1]];
                 cupMapping.forEach((wIdx, posIdx) => {
                     document.getElementById(`wrapper-${wIdx}`).style.left = `${positions[posIdx]}%`;
@@ -330,52 +401,25 @@
             
             if (idx === bananaAtWrapper) {
                 score++; 
-                if(level < 100) level++;
-                
+                level++;
                 document.getElementById(`banana-${idx}`).classList.add('visible');
-                updateHighScore();
-                callFreakAI("Menang");
-                setTimeout(() => showModal("KEREN!", `Gila sih, mata lo tajem banget! Skor: ${score} | Lvl: ${level}`, "🔥"), 500);
+                
+                // SIMPAN KE FIREBASE
+                await updateHighScore();
+                
+                callFreakAI("Menang tebakan");
+                setTimeout(() => showModal("KEREN!", `Skor lo naik jadi: ${score}! Lanjut level ${level}?`, "🔥"), 500);
             } else {
-                const finalScore = score;
-                const finalLevel = level;
+                const finalS = score;
                 document.querySelector(`#wrapper-${bananaAtWrapper} .cup`).classList.add('lifted');
                 document.getElementById(`banana-${bananaAtWrapper}`).classList.add('visible');
-                
                 score = 0; level = 1;
-                callFreakAI("Kalah");
-                setTimeout(() => showModal("NYARIS!", `Dikit lagi tadi! Skor: ${finalScore} | Lvl Mentok: ${finalLevel}. Semangat lagi!`, "🌈"), 500);
+                callFreakAI("Kalah tebakan");
+                setTimeout(() => showModal("ZONK!", `Skor akhir lo: ${finalS}. Cupu ah!`, "💀"), 500);
             }
             document.getElementById('score').innerText = score;
             document.getElementById('level').innerText = level;
         };
-
-        async function updateHighScore() {
-            if (!db || !user || score === 0) return;
-            const appId = typeof __app_id !== 'undefined' ? __app_id : 'tebak-pisang-freak';
-            await db.doc(`/artifacts/${appId}/public/data/leaderboard/${user.uid}`).set({
-                name: playerName, score: score, level: level, userId: user.uid, date: Date.now()
-            }, { merge: true });
-        }
-
-        function loadLeaderboard() {
-            const appId = typeof __app_id !== 'undefined' ? __app_id : 'tebak-pisang-freak';
-            db.collection(`/artifacts/${appId}/public/data/leaderboard`)
-                .onSnapshot(snap => {
-                    const list = [];
-                    snap.forEach(d => list.push(d.data()));
-                    list.sort((a,b) => b.score - a.score);
-                    document.getElementById('leaderboard-list').innerHTML = list.slice(0,10).map((u, i) => `
-                        <div class="flex justify-between items-center p-4 bg-white border-4 border-black shadow-[5px_5px_0px_#000]">
-                            <div class="flex flex-col">
-                                <span class="font-bold">${i+1}. ${u.name}</span>
-                                <span class="text-[10px] opacity-50">Level: ${u.level || 1}</span>
-                            </div>
-                            <span class="font-black text-xl">${u.score}</span>
-                        </div>
-                    `).join('');
-                }, () => {});
-        }
 
         window.toggleLeaderboard = () => document.getElementById('leaderboard-box').classList.toggle('hidden');
         function showModal(t, txt, i) {
