@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tebak Pisang - Game Dukun AI</title>
+    <title>TEBAK PISANG NGEHE 🍌🔥</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Reggae+One&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Comic+Neue:wght@700&family=Permanent+Marker&display=swap" rel="stylesheet">
     
     <!-- Firebase SDK (Compat Version) -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -18,31 +18,45 @@
 
     <style>
         :root { 
-            --cup-width: 85px; 
+            --cup-width: 90px; 
             --speed: 0.4s;
         }
-        @media (min-width: 768px) { :root { --cup-width: 130px; } }
+        @media (min-width: 768px) { :root { --cup-width: 140px; } }
 
         body {
-            background-color: #1a1a2e;
-            background-image: radial-gradient(circle, #2e1a47 0%, #1a1a2e 100%);
+            background-color: #ffccff;
+            background-image: url("https://img.sanishtech.com/u/669af3d62b957042e76eb70a34406d71.png"); 
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
             min-height: 100vh;
             margin: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Comic Neue', cursive;
             overflow-x: hidden;
-            color: white;
+            color: #000;
             touch-action: manipulation;
         }
 
-        .title-font {
-            font-family: 'Luckiest Guy', cursive;
-            letter-spacing: 2px;
-            color: #fbbf24;
-            text-shadow: 3px 3px 0px #000, -1px -1px 0px #000;
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.15); 
+            z-index: -1;
         }
 
-        .dukun-font {
-            font-family: 'Reggae One', cursive;
+        .freak-title {
+            font-family: 'Bungee', cursive;
+            color: #ffff00;
+            -webkit-text-stroke: 2px #000;
+            text-shadow: 6px 6px 0px #ff0000;
+            transform: rotate(-2deg);
+            line-height: 1.2;
+        }
+
+        .ngehe-font {
+            font-family: 'Permanent Marker', cursive;
         }
 
         .main-wrapper {
@@ -53,23 +67,27 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            padding: 10px;
         }
 
         .game-container {
             position: relative;
-            height: 250px;
+            height: 220px;
             width: 100%;
             max-width: 600px;
-            margin: 40px auto;
+            margin: 30px auto;
             z-index: 40;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            border: 8px solid #000;
+            box-shadow: 15px 15px 0px rgba(0,0,0,0.6);
         }
 
         .cup-wrapper {
             position: absolute;
-            bottom: 0;
+            bottom: 10px;
             width: var(--cup-width);
-            transition: left var(--speed) cubic-bezier(0.4, 0, 0.2, 1);
+            transition: left var(--speed) cubic-bezier(0.68, -0.55, 0.265, 1.55);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -78,134 +96,139 @@
 
         .cup {
             width: 100%;
-            height: 120px;
-            background-image: url('https://image2url.com/r2/default/images/1768898996435-94caeedf-873d-4e78-ac1f-909b3c569c4b.png');
+            height: 110px;
+            background-image: url('https://image2url.com/r2/default/images/1768992209991-02db9915-a866-47bf-85b3-57526d208b01.png');
             background-size: contain;
             background-position: center;
             background-repeat: no-repeat;
             cursor: pointer;
             z-index: 50;
-            transition: transform 0.3s ease;
-            filter: drop-shadow(0 0 10px #7c3aed);
+            transition: transform 0.2s ease;
+            filter: drop-shadow(5px 5px 0px #000);
         }
 
         @media (min-width: 768px) { .cup { height: 140px; } }
 
-        .cup.lifted { transform: translateY(-100px) rotate(-5deg); }
+        .cup.lifted { transform: translateY(-130px) scale(1.3) rotate(15deg); }
 
         .banana {
             position: absolute;
-            bottom: 10px;
-            font-size: 2.5rem;
+            bottom: 15px;
+            font-size: 3.5rem;
             z-index: 45;
             opacity: 0;
-            transition: opacity 0.2s;
+            transition: opacity 0.1s;
         }
 
         .banana.visible { opacity: 1; }
 
-        .ai-dukun-bubble {
-            background: #2d1b4d;
-            border: 2px solid #a855f7;
-            border-radius: 15px;
-            padding: 12px 20px;
-            margin-bottom: 20px;
-            max-width: 320px;
-            box-shadow: 0 0 20px rgba(168, 85, 247, 0.4);
+        .freak-bubble {
+            background: #ffff00;
+            border: 4px solid #000;
+            padding: 10px 15px;
+            box-shadow: 8px 8px 0px #000;
+            max-width: 250px;
             text-align: center;
+            position: relative;
+            transform: skew(-3deg);
         }
 
-        #debug-log {
-            position: fixed;
-            top: 10px;
-            left: 10px;
-            background: rgba(0,0,0,0.6);
-            color: #0f0;
-            font-family: monospace;
-            font-size: 10px;
-            padding: 4px 8px;
-            border-radius: 4px;
-            pointer-events: none;
+        .btn-ngehe {
+            background: #22c55e;
+            border: 6px solid #000;
+            color: white;
+            padding: 15px 30px;
+            font-weight: 900;
+            text-transform: uppercase;
+            box-shadow: 10px 10px 0px #000;
+        }
+
+        .btn-ngehe:active {
+            transform: translate(4px, 4px);
+            box-shadow: 6px 6px 0px #000;
         }
     </style>
 </head>
 
 <body>
-    <div id="debug-log">Status: Menghubungkan Gaib...</div>
-
     <!-- Login Box -->
-    <div id="login-box" class="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-[5000] p-4">
-        <div class="bg-gray-900 border-[4px] border-purple-600 p-8 rounded-[32px] text-center shadow-2xl max-w-sm w-full">
-            <div class="text-5xl mb-4">🔮</div>
-            <h2 class="text-2xl font-black mb-6 text-purple-400 uppercase dukun-font">SIAPA NAMA TUMBALNYA?</h2>
-            <input type="text" id="player-name-input" maxlength="15" placeholder="@username" class="w-full p-4 bg-gray-800 border-2 border-purple-900 rounded-xl mb-6 text-xl font-bold text-center text-white outline-none focus:border-purple-500">
-            <button onclick="savePlayerName()" class="w-full bg-purple-600 text-white font-black py-4 rounded-xl hover:bg-purple-700 shadow-lg text-lg uppercase transition-all">SUNGKEM</button>
+    <div id="login-box" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[5000] p-4">
+        <div class="bg-white border-[10px] border-black p-8 text-center shadow-[20px_20px_0px_#ff00ff] max-w-sm w-full">
+            <div class="text-7xl mb-4 animate-bounce">🤔</div>
+            <h2 class="text-4xl font-black mb-6 ngehe-font italic uppercase underline text-black">LU SIAPA DEH?</h2>
+            <input type="text" id="player-name-input" maxlength="15" placeholder="Nama lo, jangan anonim..." class="w-full p-4 bg-yellow-100 border-4 border-black mb-6 text-xl font-bold text-center outline-none focus:bg-cyan-300">
+            <button onclick="savePlayerName()" class="w-full bg-blue-500 text-white font-black py-5 border-4 border-black shadow-[8px_8px_0px_#000] text-xl uppercase transition-all active:translate-y-2 active:shadow-none">GAS MAEN!</button>
         </div>
     </div>
 
     <div class="main-wrapper">
-        <div class="text-center mb-4 relative z-50">
-            <h1 class="text-4xl md:text-6xl title-font mb-4 uppercase italic">TEBAK PISANG 🔮</h1>
+        <header class="text-center mb-4 relative z-50">
+            <h1 class="text-5xl md:text-7xl freak-title mb-6">PISANG NGEHE!</h1>
             
-            <div class="flex flex-col items-center mb-6">
-                <div id="ai-comment-box" class="ai-dukun-bubble hidden">
-                    <span class="text-purple-300 text-[10px] block mb-1 uppercase tracking-widest">🕯️ Bisikan Dukun AI</span>
-                    <span id="ai-text" class="text-white italic text-sm">"Mencium bau kekalahan..."</span>
+            <div class="flex flex-col items-center min-h-[100px] mb-4">
+                <div id="ai-comment-box" class="freak-bubble hidden">
+                    <span class="text-[10px] font-black block border-b-2 border-black mb-1">KOMENTAR NYELENEH</span>
+                    <p id="ai-text" class="italic text-sm font-bold uppercase">"MATA LO SEHAT KAN?"</p>
                 </div>
             </div>
 
-            <div class="flex items-center justify-center gap-3 mb-6">
-                <div class="bg-gray-900 border-2 border-yellow-600 px-4 py-1 rounded-xl font-black text-yellow-500 text-sm">Skor: <span id="score">0</span></div>
-                <div class="bg-gray-900 border-2 border-purple-600 px-4 py-1 rounded-xl font-black text-purple-400 text-sm">Level: <span id="level">1</span></div>
-                <button onclick="toggleLeaderboard()" class="bg-blue-600 px-4 py-1 rounded-xl font-black text-white text-sm">🏆 Ranking</button>
+            <div class="flex items-center justify-center gap-3">
+                <div class="bg-white border-4 border-black px-4 py-1 font-black text-sm shadow-[6px_6px_0px_#000]">SKOR: <span id="score">0</span></div>
+                <div class="bg-white border-4 border-black px-4 py-1 font-black text-sm shadow-[6px_6px_0px_#000]">LVL: <span id="level">1</span></div>
+                <button onclick="toggleLeaderboard()" class="bg-cyan-400 border-4 border-black px-4 py-1 font-black text-sm shadow-[6px_6px_0px_#000]">🏆 TOP SKOR</button>
             </div>
-        </div>
+        </header>
 
-        <div class="game-container" id="game-board">
-            <div class="cup-wrapper" id="wrapper-0" style="left: 15%;"><div class="banana" id="banana-0">🍌</div><div class="cup" onclick="handleCupClick(0)"></div></div>
-            <div class="cup-wrapper" id="wrapper-1" style="left: 50%;"><div class="banana" id="banana-1">🍌</div><div class="cup" onclick="handleCupClick(1)"></div></div>
-            <div class="cup-wrapper" id="wrapper-2" style="left: 85%;"><div class="banana" id="banana-2">🍌</div><div class="cup" onclick="handleCupClick(2)"></div></div>
-        </div>
+        <main class="game-container" id="game-board">
+            <div class="cup-wrapper" id="wrapper-0" style="left: 15%;">
+                <div class="banana" id="banana-0">🍌</div>
+                <div class="cup" onclick="handleCupClick(0)"></div>
+            </div>
+            <div class="cup-wrapper" id="wrapper-1" style="left: 50%;">
+                <div class="banana" id="banana-1">🍌</div>
+                <div class="cup" onclick="handleCupClick(1)"></div>
+            </div>
+            <div class="cup-wrapper" id="wrapper-2" style="left: 85%;">
+                <div class="banana" id="banana-2">🍌</div>
+                <div class="cup" onclick="handleCupClick(2)"></div>
+            </div>
+        </main>
 
-        <div class="mt-8 relative z-50">
-            <button id="start-btn" class="bg-purple-700 hover:bg-purple-600 text-white text-xl font-black py-4 px-10 rounded-2xl shadow-[0_6px_0_rgb(88,28,135)] active:translate-y-[4px] active:shadow-none transition-all uppercase" onclick="startSequence()">
-                MULAI RITUAL!
+        <footer class="mt-8 relative z-50">
+            <button id="start-btn" class="btn-ngehe text-2xl" onclick="startSequence()">
+                KOCAK-IN MAS!
             </button>
-        </div>
+        </footer>
     </div>
 
-    <!-- Leaderboard -->
+    <!-- Leaderboard Modal -->
     <div id="leaderboard-box" class="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center hidden z-[6000] p-4">
-        <div class="bg-gray-900 border-4 border-purple-600 p-6 rounded-[32px] shadow-2xl w-full max-w-sm flex flex-col max-h-[80vh]">
-            <h2 class="text-xl font-black mb-4 text-center text-purple-400 uppercase dukun-font">🏆 JAWARA TERPILIH 🏆</h2>
-            <div id="leaderboard-list" class="flex-1 overflow-y-auto mb-4 space-y-2"></div>
-            <button onclick="toggleLeaderboard()" class="w-full bg-purple-600 text-white font-black py-3 rounded-xl uppercase">TUTUP</button>
+        <div class="bg-white border-[10px] border-black p-6 shadow-[25px_25px_0px_#ff00ff] w-full max-w-sm flex flex-col max-h-[85vh]">
+            <h2 class="text-3xl font-black mb-6 text-center italic uppercase ngehe-font underline">🏆 GOLONGAN ELITE 🏆</h2>
+            <div id="leaderboard-list" class="flex-1 overflow-y-auto mb-4 space-y-3 pr-2 text-black"></div>
+            <button onclick="toggleLeaderboard()" class="w-full bg-red-500 text-white border-4 border-black font-black py-4 uppercase text-xl">CABUT</button>
         </div>
     </div>
 
     <!-- Message Modal -->
-    <div id="message-box" class="fixed inset-0 bg-black/95 flex items-center justify-center hidden z-[7000] p-4">
-        <div class="bg-gray-900 p-8 rounded-[40px] text-center max-w-sm w-full shadow-2xl border-4 border-purple-600">
-            <div id="modal-icon" class="text-6xl mb-2"></div>
-            <h2 id="modal-title" class="text-2xl font-black mb-2 text-purple-400 dukun-font uppercase"></h2>
-            <p id="modal-text" class="text-gray-400 mb-6 font-bold"></p>
-            <button onclick="closeModal()" class="w-full bg-purple-600 text-white font-black py-4 rounded-2xl uppercase">LANJUT</button>
+    <div id="message-box" class="fixed inset-0 bg-yellow-400/95 flex items-center justify-center hidden z-[7000] p-4">
+        <div class="bg-white p-10 border-[12px] border-black text-center max-w-sm w-full shadow-[20px_20px_0px_#000]">
+            <div id="modal-icon" class="text-8xl mb-6"></div>
+            <h2 id="modal-title" class="text-4xl font-black mb-4 ngehe-font uppercase italic text-black"></h2>
+            <p id="modal-text" class="text-xl font-bold mb-10 text-gray-800"></p>
+            <button onclick="closeModal()" class="w-full bg-green-500 border-4 border-black py-5 font-black uppercase text-2xl active:translate-y-2 active:shadow-none">GAS LAGI!</button>
         </div>
     </div>
 
     <script>
-        const GEMINI_API_KEY = ""; // Managed by environment
+        const apiKey = ""; 
         let db, auth, user, playerName = "";
         let score = 0, level = 1, isMoving = false, canInteract = false;
         let bananaAtWrapper = 1, positions = [15, 50, 85], cupMapping = [0, 1, 2];
 
-        // Firebase Setup
-        async function initRitual() {
+        async function initGame() {
             try {
-                if (typeof __firebase_config === 'undefined') {
-                    document.getElementById('debug-log').innerText = "Offline Mode";
-                    return;
-                }
+                if (typeof __firebase_config === 'undefined') return;
                 const config = JSON.parse(__firebase_config);
                 firebase.initializeApp(config);
                 db = firebase.firestore();
@@ -221,39 +244,40 @@
                     user = u;
                     if (user) loadLeaderboard();
                 });
-                document.getElementById('debug-log').innerText = "Ritual Terhubung";
-            } catch (e) {
-                console.error(e);
-                document.getElementById('debug-log').innerText = "Gagal Ritual";
-            }
+            } catch (e) { console.error(e); }
         }
 
-        async function callDukunAI(context) {
+        async function callFreakAI(context) {
             const aiBox = document.getElementById('ai-comment-box');
             const aiText = document.getElementById('ai-text');
             try {
-                const prompt = `Pemain ${playerName}, Skor ${score}, Context: ${context}. Balas sebagai Dukun Sakti misterius nan kocak, bhs gaul Jakarta, max 10 kata. Sebut khodam/sesajen.`;
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${GEMINI_API_KEY}`, {
+                const prompt = `Pemain: ${playerName}, Skor: ${score}, Level: ${level}, Konteks: ${context}. 
+                Berperanlah sebagai 'TEMAN NYINYIR' yang sarkas, kocak, tapi elegan. 
+                Gunakan bahasa gaul Jakarta/Jaksel (suka pake 'literally', 'honestly', 'hadeh'). 
+                LEDEK pemain tapi jangan menghina kasar. Berikan sindiran halus yang lucu. Maks 10 kata.`;
+                
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
                 });
-                const data = await res.json();
-                const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Khodam gue lagi rebahan.";
+
+                const data = await response.json();
+                const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Literally, kok gitu sih?";
                 aiText.innerText = `"${reply.trim()}"`;
                 aiBox.classList.remove('hidden');
             } catch (e) { aiBox.classList.add('hidden'); }
         }
 
-        function savePlayerName() {
+        window.savePlayerName = () => {
             const input = document.getElementById('player-name-input');
             if (!input.value.trim()) return;
             playerName = input.value.trim();
             document.getElementById('login-box').classList.add('hidden');
-            callDukunAI("Masuk ke arena");
-        }
+            callFreakAI("Baru masuk");
+        };
 
-        async function startSequence() {
+        window.startSequence = async () => {
             if (isMoving) return;
             isMoving = true; canInteract = false;
             document.getElementById('start-btn').disabled = true;
@@ -263,21 +287,29 @@
             
             const activeCup = document.querySelector(`#wrapper-${bananaAtWrapper} .cup`);
             const activeBanana = document.querySelector(`#wrapper-${bananaAtWrapper} .banana`);
+            
             activeBanana.classList.add('visible');
             activeCup.classList.add('lifted');
             
-            await new Promise(r => setTimeout(r, 1000));
+            await new Promise(r => setTimeout(r, 600));
             activeCup.classList.remove('lifted');
             await new Promise(r => setTimeout(r, 400));
             activeBanana.classList.remove('visible');
 
-            const speed = Math.max(0.1, 0.4 - (level * 0.04));
+            const startSpeed = 0.4;
+            const endSpeed = 0.05;
+            const speed = Math.max(endSpeed, startSpeed - ((level - 1) * (startSpeed - endSpeed) / 99));
+            
+            const startShuffles = 8;
+            const endShuffles = 50;
+            const count = Math.min(endShuffles, Math.floor(startShuffles + ((level - 1) * (endShuffles - startShuffles) / 99)));
+
             document.documentElement.style.setProperty('--speed', `${speed}s`);
             
-            const count = 8 + (level * 2);
             for (let i = 0; i < count; i++) {
                 let p1 = Math.floor(Math.random() * 3), p2 = Math.floor(Math.random() * 3);
                 while (p1 === p2) p2 = Math.floor(Math.random() * 3);
+                
                 [cupMapping[p1], cupMapping[p2]] = [cupMapping[p2], cupMapping[p1]];
                 cupMapping.forEach((wIdx, posIdx) => {
                     document.getElementById(`wrapper-${wIdx}`).style.left = `${positions[posIdx]}%`;
@@ -286,69 +318,77 @@
             }
             isMoving = false; canInteract = true;
             document.getElementById('start-btn').disabled = false;
-            callDukunAI("Gelas selesai diacak");
-        }
+        };
 
-        async function handleCupClick(idx) {
+        window.handleCupClick = async (idx) => {
             if (!canInteract) return;
             canInteract = false;
-            document.querySelector(`#wrapper-${idx} .cup`).classList.add('lifted');
+            
+            const clickedCup = document.querySelector(`#wrapper-${idx} .cup`);
+            clickedCup.classList.add('lifted');
             
             if (idx === bananaAtWrapper) {
-                score++; level++;
+                score++; 
+                if(level < 100) level++;
+                
                 document.getElementById(`banana-${idx}`).classList.add('visible');
-                updateScore();
-                callDukunAI("Tebakan benar");
-                setTimeout(() => showModal("WANGSIT BENAR!", `Ritual berhasil! Skor: ${score}`, "🔮"), 500);
+                updateHighScore();
+                callFreakAI("Menang tapi hoki");
+                setTimeout(() => showModal("HOKI!", `Literally hoki banget sih lo. Skor: ${score}`, "🤥"), 500);
             } else {
-                const final = score;
+                const finalScore = score;
+                const finalLevel = level;
                 document.querySelector(`#wrapper-${bananaAtWrapper} .cup`).classList.add('lifted');
                 document.getElementById(`banana-${bananaAtWrapper}`).classList.add('visible');
+                
                 score = 0; level = 1;
-                callDukunAI("Tebakan salah");
-                setTimeout(() => showModal("SESAJEN KURANG!", `Kutukan salah tebak! Skor akhir: ${final}`, "💀"), 500);
+                callFreakAI("Kalah memalukan");
+                setTimeout(() => showModal("HADEH...", `Honestly, gue kecewa sih. Skor cuma ${finalScore}.`, "💅"), 500);
             }
             document.getElementById('score').innerText = score;
             document.getElementById('level').innerText = level;
-        }
+        };
 
-        async function updateScore() {
-            if (!db || !user) return;
-            const appId = typeof __app_id !== 'undefined' ? __app_id : 'tebak-pisang';
+        async function updateHighScore() {
+            if (!db || !user || score === 0) return;
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'tebak-pisang-freak';
             await db.doc(`/artifacts/${appId}/public/data/leaderboard/${user.uid}`).set({
-                name: playerName, score: score, userId: user.uid, date: Date.now()
+                name: playerName, score: score, level: level, userId: user.uid, date: Date.now()
             }, { merge: true });
         }
 
         function loadLeaderboard() {
-            const appId = typeof __app_id !== 'undefined' ? __app_id : 'tebak-pisang';
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'tebak-pisang-freak';
             db.collection(`/artifacts/${appId}/public/data/leaderboard`)
-                .onSnapshot(s => {
+                .onSnapshot(snap => {
                     const list = [];
-                    s.forEach(d => list.push(d.data()));
+                    snap.forEach(d => list.push(d.data()));
                     list.sort((a,b) => b.score - a.score);
                     document.getElementById('leaderboard-list').innerHTML = list.slice(0,10).map((u, i) => `
-                        <div class="flex justify-between p-3 bg-gray-800 rounded-lg ${u.userId === user?.uid ? 'border border-purple-500' : ''}">
-                            <span class="text-gray-400">#${i+1} <b class="text-white">${u.name}</b></span>
-                            <span class="text-purple-400 font-bold">${u.score}</span>
+                        <div class="flex justify-between items-center p-4 bg-white border-4 border-black shadow-[5px_5px_0px_#000]">
+                            <div class="flex flex-col">
+                                <span class="font-bold">${i+1}. ${u.name}</span>
+                                <span class="text-[10px] opacity-50">Level: ${u.level || 1}</span>
+                            </div>
+                            <span class="font-black text-xl">${u.score}</span>
                         </div>
                     `).join('');
-                });
+                }, () => {});
         }
 
-        function toggleLeaderboard() { document.getElementById('leaderboard-box').classList.toggle('hidden'); }
+        window.toggleLeaderboard = () => document.getElementById('leaderboard-box').classList.toggle('hidden');
         function showModal(t, txt, i) {
             document.getElementById('modal-title').innerText = t;
             document.getElementById('modal-text').innerText = txt;
             document.getElementById('modal-icon').innerText = i;
             document.getElementById('message-box').classList.remove('hidden');
         }
-        function closeModal() {
+        window.closeModal = () => {
             document.getElementById('message-box').classList.add('hidden');
             document.querySelectorAll('.cup, .banana').forEach(el => el.classList.remove('visible', 'lifted'));
-        }
+        };
 
-        window.onload = initRitual;
+        window.onload = initGame;
     </script>
 </body>
 </html>
