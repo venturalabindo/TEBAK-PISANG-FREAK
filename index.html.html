@@ -154,9 +154,9 @@
     <!-- Login Box -->
     <div id="login-box" class="fixed inset-0 bg-black/80 flex items-center justify-center z-[5000] p-4">
         <div class="bg-white border-[10px] border-black p-8 text-center shadow-[20px_20px_0px_#ff00ff] max-w-sm w-full">
-            <div class="text-7xl mb-4 animate-bounce">🤔</div>
-            <h2 class="text-4xl font-black mb-6 ngehe-font italic uppercase underline text-black">LU SIAPA DEH?</h2>
-            <input type="text" id="player-name-input" maxlength="15" placeholder="Nama lo, jangan anonim..." class="w-full p-4 bg-yellow-100 border-4 border-black mb-6 text-xl font-bold text-center outline-none focus:bg-cyan-300">
+            <div class="text-7xl mb-4 animate-bounce">👋</div>
+            <h2 class="text-4xl font-black mb-6 ngehe-font italic uppercase underline text-black">KENALAN DULU DONG!</h2>
+            <input type="text" id="player-name-input" maxlength="15" placeholder="Nama lo siapa..." class="w-full p-4 bg-yellow-100 border-4 border-black mb-6 text-xl font-bold text-center outline-none focus:bg-cyan-300">
             <button onclick="savePlayerName()" class="w-full bg-blue-500 text-white font-black py-5 border-4 border-black shadow-[8px_8px_0px_#000] text-xl uppercase transition-all active:translate-y-2 active:shadow-none">GAS MAEN!</button>
         </div>
     </div>
@@ -167,8 +167,8 @@
             
             <div class="flex flex-col items-center min-h-[100px] mb-4">
                 <div id="ai-comment-box" class="freak-bubble hidden">
-                    <span class="text-[10px] font-black block border-b-2 border-black mb-1">KOMENTAR NYELENEH</span>
-                    <p id="ai-text" class="italic text-sm font-bold uppercase">"MATA LO SEHAT KAN?"</p>
+                    <span class="text-[10px] font-black block border-b-2 border-black mb-1">BESTIE FREAK</span>
+                    <p id="ai-text" class="italic text-sm font-bold uppercase">"SEMANGAT YA BESTIE!"</p>
                 </div>
             </div>
 
@@ -204,9 +204,9 @@
     <!-- Leaderboard Modal -->
     <div id="leaderboard-box" class="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center hidden z-[6000] p-4">
         <div class="bg-white border-[10px] border-black p-6 shadow-[25px_25px_0px_#ff00ff] w-full max-w-sm flex flex-col max-h-[85vh]">
-            <h2 class="text-3xl font-black mb-6 text-center italic uppercase ngehe-font underline">🏆 GOLONGAN ELITE 🏆</h2>
+            <h2 class="text-3xl font-black mb-6 text-center italic uppercase ngehe-font underline">🏆 PARA PRO FREAK 🏆</h2>
             <div id="leaderboard-list" class="flex-1 overflow-y-auto mb-4 space-y-3 pr-2 text-black"></div>
-            <button onclick="toggleLeaderboard()" class="w-full bg-red-500 text-white border-4 border-black font-black py-4 uppercase text-xl">CABUT</button>
+            <button onclick="toggleLeaderboard()" class="w-full bg-red-500 text-white border-4 border-black font-black py-4 uppercase text-xl">TUTUP</button>
         </div>
     </div>
 
@@ -215,7 +215,7 @@
         <div class="bg-white p-10 border-[12px] border-black text-center max-w-sm w-full shadow-[20px_20px_0px_#000]">
             <div id="modal-icon" class="text-8xl mb-6"></div>
             <h2 id="modal-title" class="text-4xl font-black mb-4 ngehe-font uppercase italic text-black"></h2>
-            <p id="modal-text" class="text-xl font-bold mb-10 text-gray-800"></p>
+            <p id="modal-text" class="text-xl font-bold mb-10 text-blue-600"></p>
             <button onclick="closeModal()" class="w-full bg-green-500 border-4 border-black py-5 font-black uppercase text-2xl active:translate-y-2 active:shadow-none">GAS LAGI!</button>
         </div>
     </div>
@@ -251,10 +251,11 @@
             const aiBox = document.getElementById('ai-comment-box');
             const aiText = document.getElementById('ai-text');
             try {
+                // System prompt diubah agar lebih ramah dan suportif
                 const prompt = `Pemain: ${playerName}, Skor: ${score}, Level: ${level}, Konteks: ${context}. 
-                Berperanlah sebagai 'TEMAN NYINYIR' yang sarkas, kocak, tapi elegan. 
-                Gunakan bahasa gaul Jakarta/Jaksel (suka pake 'literally', 'honestly', 'hadeh'). 
-                LEDEK pemain tapi jangan menghina kasar. Berikan sindiran halus yang lucu. Maks 10 kata.`;
+                Berperanlah sebagai 'BESTIE FREAK' yang asyik, kocak, nyeleneh tapi suportif. 
+                Gunakan bahasa gaul Jakarta. JANGAN menghina atau merendahkan pemain. 
+                Berikan semangat atau komentar lucu yang mendukung. Maks 10 kata.`;
                 
                 const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
                     method: 'POST',
@@ -263,7 +264,7 @@
                 });
 
                 const data = await response.json();
-                const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Literally, kok gitu sih?";
+                const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Yok bisa yok bestie!";
                 aiText.innerText = `"${reply.trim()}"`;
                 aiBox.classList.remove('hidden');
             } catch (e) { aiBox.classList.add('hidden'); }
@@ -274,7 +275,7 @@
             if (!input.value.trim()) return;
             playerName = input.value.trim();
             document.getElementById('login-box').classList.add('hidden');
-            callFreakAI("Baru masuk");
+            callFreakAI("Mulai masuk game");
         };
 
         window.startSequence = async () => {
@@ -333,8 +334,8 @@
                 
                 document.getElementById(`banana-${idx}`).classList.add('visible');
                 updateHighScore();
-                callFreakAI("Menang tapi hoki");
-                setTimeout(() => showModal("HOKI!", `Literally hoki banget sih lo. Skor: ${score}`, "🤥"), 500);
+                callFreakAI("Menang");
+                setTimeout(() => showModal("KEREN!", `Gila sih, mata lo tajem banget! Skor: ${score} | Lvl: ${level}`, "🔥"), 500);
             } else {
                 const finalScore = score;
                 const finalLevel = level;
@@ -342,8 +343,8 @@
                 document.getElementById(`banana-${bananaAtWrapper}`).classList.add('visible');
                 
                 score = 0; level = 1;
-                callFreakAI("Kalah memalukan");
-                setTimeout(() => showModal("HADEH...", `Honestly, gue kecewa sih. Skor cuma ${finalScore}.`, "💅"), 500);
+                callFreakAI("Kalah");
+                setTimeout(() => showModal("NYARIS!", `Dikit lagi tadi! Skor: ${finalScore} | Lvl Mentok: ${finalLevel}. Semangat lagi!`, "🌈"), 500);
             }
             document.getElementById('score').innerText = score;
             document.getElementById('level').innerText = level;
